@@ -1,0 +1,64 @@
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "add", function () {
+  return add;
+});
+_parcelHelpers.export(exports, "multiply", function () {
+  return multiply;
+});
+_parcelHelpers.export(exports, "subtract", function () {
+  return subtract;
+});
+_parcelHelpers.export(exports, "divide", function () {
+  return divide;
+});
+_parcelHelpers.export(exports, "isZero", function () {
+  return isZero;
+});
+_parcelHelpers.export(exports, "magnitude", function () {
+  return magnitude;
+});
+_parcelHelpers.export(exports, "normalize", function () {
+  return normalize;
+});
+_parcelHelpers.export(exports, "distance", function () {
+  return distance;
+});
+_parcelHelpers.export(exports, "dot", function () {
+  return dot;
+});
+_parcelHelpers.export(exports, "mapComponents", function () {
+  return mapComponents;
+});
+_parcelHelpers.export(exports, "signedAngle", function () {
+  return signedAngle;
+});
+_parcelHelpers.export(exports, "round", function () {
+  return round;
+});
+_parcelHelpers.export(exports, "vector2", function () {
+  return vector2;
+});
+_parcelHelpers.export(exports, "interpolate", function () {
+  return interpolate;
+});
+var _srcUtil = require('../src/util');
+const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
+const multiply = (vector, scalar) => [vector[0] * scalar, vector[1] * scalar];
+const subtract = (a, b) => add(a, multiply(b, -1));
+const divide = (vector, denominator) => multiply(vector, 1 / denominator);
+const isZero = vector => vector.every(component => component === 0);
+const magnitude = vector => Math.hypot(...vector);
+const normalize = vector => isZero(vector) ? [0, 0] : divide(vector, magnitude(vector));
+const distance = (a, b) => magnitude(subtract(a, b));
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
+const mapComponents = map => v => {
+  return [map(v[0]), map(v[1])];
+};
+const signedAngle = (a, b) => {
+  const angleSign = Math.sign(a[1] * b[0] - a[0] * b[1]);
+  return Math.acos(dot(a, b)) * angleSign;
+};
+const round = mapComponents(Math.round);
+const vector2 = (x, y) => [x, y];
+const interpolate = (a, b, t) => vector2(_srcUtil.interpolate(a[0], b[0], t), _srcUtil.interpolate(a[1], b[1], t));

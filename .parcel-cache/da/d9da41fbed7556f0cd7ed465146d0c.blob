@@ -1,0 +1,60 @@
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "transformPoint", function () {
+  return transformPoint;
+});
+_parcelHelpers.export(exports, "transformDirection", function () {
+  return transformDirection;
+});
+_parcelHelpers.export(exports, "inverseTransformPoint", function () {
+  return inverseTransformPoint;
+});
+_parcelHelpers.export(exports, "inverseTransformDirection", function () {
+  return inverseTransformDirection;
+});
+_parcelHelpers.export(exports, "transformTransform", function () {
+  return transformTransform;
+});
+_parcelHelpers.export(exports, "inverseTransformTransform", function () {
+  return inverseTransformTransform;
+});
+var _mat3x = require('./mat3x3');
+var _vec = require('./vec3');
+;
+const transformPoint = transform => {
+  return point => {
+    return _vec.add(transform.position, _mat3x.multiplyVector(transform.orientation, point));
+  };
+};
+const transformDirection = transform => {
+  return direction => {
+    return _mat3x.multiplyVector(transform.orientation, direction);
+  };
+};
+const inverseTransformPoint = transform => {
+  const invMat = _mat3x.inverse(transform.orientation);
+  return point => _mat3x.multiplyVector(invMat, _vec.subtract(point, transform.position));
+};
+const inverseTransformDirection = transform => {
+  const invMat = _mat3x.inverse(transform.orientation);
+  return direction => _mat3x.multiplyVector(invMat, direction);
+};
+const transformTransform = transform => {
+  return toTransform => {
+    const pointTransform = transformPoint(transform);
+    return {
+      position: pointTransform(toTransform.position),
+      orientation: _mat3x.multiplyMatrix(transform.orientation, toTransform.orientation)
+    };
+  };
+};
+const inverseTransformTransform = transform => {
+  const inversePointTransform = inverseTransformPoint(transform);
+  const inverseOrientation = _mat3x.inverse(transform.orientation);
+  return toTransform => {
+    return {
+      position: inversePointTransform(toTransform.position),
+      orientation: _mat3x.multiplyMatrix(inverseOrientation, toTransform.orientation)
+    };
+  };
+};

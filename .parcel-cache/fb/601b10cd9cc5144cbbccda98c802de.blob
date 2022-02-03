@@ -1,0 +1,31 @@
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "viewportToCanvas", function () {
+  return viewportToCanvas;
+});
+_parcelHelpers.export(exports, "camPointToScreenPoint", function () {
+  return camPointToScreenPoint;
+});
+_parcelHelpers.export(exports, "worldPointToCamPoint", function () {
+  return worldPointToCamPoint;
+});
+_parcelHelpers.export(exports, "worldPointToScreenPoint", function () {
+  return worldPointToScreenPoint;
+});
+var _fpTsLibFunction = require('fp-ts/lib/function');
+var _libMat3x = require('../lib/mat3x3');
+var _libVec = require('../lib/vec3');
+var _cameraPerspectiveCamera = require('./camera/perspective-camera');
+const viewportToCanvas = ctx => {
+  const canvas = ctx.canvas;
+  return point => {
+    return [point[0] * canvas.offsetWidth / 2, point[1] * canvas.offsetHeight / 2];
+  };
+};
+const camPointToScreenPoint = (ctx, camera) => camPoint => {
+  return viewportToCanvas(ctx)(_cameraPerspectiveCamera.projectPoint(camera.settings)(camPoint));
+};
+const worldPointToCamPoint = camera => worldPoint => {
+  return _libMat3x.multiplyVector(camera.inverseMatrix, _libVec.subtract(worldPoint, camera.transform.position));
+};
+const worldPointToScreenPoint = (ctx, camera) => _fpTsLibFunction.flow(worldPointToCamPoint(camera), camPointToScreenPoint(ctx, camera));

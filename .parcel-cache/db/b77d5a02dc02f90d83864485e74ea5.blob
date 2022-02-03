@@ -1,0 +1,29 @@
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "createCamSettingsFromCanvas", function () {
+  return createCamSettingsFromCanvas;
+});
+_parcelHelpers.export(exports, "projectPoint", function () {
+  return projectPoint;
+});
+_parcelHelpers.export(exports, "projectPoints", function () {
+  return projectPoints;
+});
+const createCamSettingsFromCanvas = (zScale, planeScale, canvas) => {
+  return {
+    zScale,
+    planeWidthHalf: canvas.offsetWidth * planeScale / 2,
+    planeHeightHalf: canvas.offsetHeight * planeScale / 2
+  };
+};
+const projectPoint = cam => {
+  return point => {
+    const c = cam.zScale / point[2];
+    return [c * point[0] / cam.planeWidthHalf, c * point[1] / cam.planeHeightHalf];
+  };
+};
+const projectPoints = cam => {
+  return points => {
+    return points.map(projectPoint(cam));
+  };
+};

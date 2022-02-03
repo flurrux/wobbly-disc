@@ -1,0 +1,27 @@
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "adjustCanvasSizeToWindow", function () {
+  return adjustCanvasSizeToWindow;
+});
+_parcelHelpers.export(exports, "setupCanvas", function () {
+  return setupCanvas;
+});
+function adjustCanvasSizeToWindow(canvas) {
+  const widthPx = window.innerWidth;
+  const heightPx = window.innerHeight;
+  const scalePx = window.devicePixelRatio || 1;
+  Object.assign(canvas.style, {
+    width: `${widthPx}px`,
+    height: `${heightPx}px`
+  });
+  Object.assign(canvas, {
+    width: widthPx * scalePx,
+    height: heightPx * scalePx
+  });
+}
+function setupCanvas() {
+  const canvas = document.createElement("canvas");
+  document.body.appendChild(canvas);
+  adjustCanvasSizeToWindow(canvas);
+  return canvas;
+}

@@ -1,0 +1,200 @@
+var _fpTsLibFunction = require('fp-ts/lib/function');
+var _libCanvasUtil = require('../lib/canvas-util');
+var _libCtxUtil = require('../lib/ctx-util');
+var _libMat3x = require('../lib/mat3x3');
+var _libTransform = require('../lib/transform');
+var _libVec = require('../lib/vec3');
+var _cameraOrbitCamera = require('./camera/orbit-camera');
+var _spaceConversion = require('./space-conversion');
+var _util = require('./util');
+const {sin, cos, sqrt} = Math;
+function setupOrbitCameraControl(canvas, transformCamera) {
+  canvas.addEventListener("mousemove", e => {
+    if (e.buttons !== 1) return;
+    const s = 0.01;
+    transformCamera(cam => ({
+      ...cam,
+      longitude: cam.longitude + e.movementX * s,
+      latitude: cam.latitude + e.movementY * s
+    }));
+  });
+  canvas.addEventListener("wheel", e => {
+    transformCamera(cam => ({
+      ...cam,
+      radius: cam.radius * (1 + e.deltaY * 0.001)
+    }));
+  });
+}
+// floor-grid ###
+const renderFloorGrid = (function () {
+  function createGridPoints(size) {
+    let points = [];
+    for (let x = 0; x < size[0]; x++) {
+      for (let y = 0; y < size[1]; y++) {
+        points.push([x, y]);
+      }
+    }
+    return points;
+  }
+  const floorCellCounts = [6, 6];
+  const floorGridPoints = createGridPoints(floorCellCounts).map(point => _libVec.multiply([point[0] - (floorCellCounts[0] - 1) / 2, 0, point[1] - (floorCellCounts[1] - 1) / 2], 1));
+  const floorGridLines = (function () {
+    let lines = [];
+    for (let x = 0; x < floorCellCounts[0]; x++) {
+      const baseIndex = x * floorCellCounts[1];
+      for (let y = 0; y < floorCellCounts[1] - 1; y++) {
+        lines.push([baseIndex + y, baseIndex + y + 1]);
+      }
+    }
+    for (let y = 0; y < floorCellCounts[1]; y++) {
+      for (let x = 0; x < floorCellCounts[0] - 1; x++) {
+        lines.push([y + x * floorCellCounts[1], y + (x + 1) * floorCellCounts[1]]);
+      }
+    }
+    return lines;
+  })();
+  return (ctx, worldToScreen) => {
+    const screenGridPoints = floorGridPoints.map(worldToScreen);
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 4;
+    for (const line of floorGridLines) {
+      _libCtxUtil.pathPolyline(ctx, [screenGridPoints[line[0]], screenGridPoints[line[1]]]);
+      ctx.stroke();
+    }
+  };
+})();
+// disc ###
+const circle = (function () {
+  let points = [];
+  const pointCount = 40;
+  for (let i = 0; i < pointCount; i++) {
+    const p = i / pointCount;
+    const angle = p * 2 * Math.PI;
+    points.push([sin(angle), cos(angle)]);
+  }
+  return points;
+})();
+function calculateWobblyDiscTransform(state) {
+  const {theta, radius, y} = state;
+  const w = Math.sqrt(radius ** 2 - y ** 2);
+  const a = theta * radius / w;
+  const r = [-sin(a) * radius, 0, cos(a) * radius];
+  const f = [cos(a) * w, -y, sin(a) * w];
+  const baseMatrix = [...r, ..._libVec.cross(r, f), ...f];
+  const localOffsetMatrix = [-sin(theta), 0, cos(theta), 0, 1, 0, cos(theta), 0, sin(theta)];
+  return {
+    position: [0, y, 0],
+    orientation: _libMat3x.multiplyMatrix(baseMatrix, localOffsetMatrix)
+  };
+}
+const projectPointOntoShadow = flatSunDirection => point => {
+  return [point[0] + flatSunDirection[0] * point[1], 0, point[2] + flatSunDirection[2] * point[1]];
+};
+function renderWobblyDisc(ctx, worldToCam, camToScreen, worldToScreen, state) {
+  const transform = calculateWobblyDiscTransform(state);
+  const circlePointsWorld = circle.map(_fpTsLibFunction.flow(point => [point[0], 0, point[1]], _libTransform.transformPoint(transform)));
+  const circlePointsScreen = circlePointsWorld.map(worldToScreen);
+  // draw shadow
+  const shadowPoints = circlePointsWorld.map(projectPointOntoShadow([0.8, 0, 0.2]));
+  ctx.fillStyle = "black";
+  ctx.globalAlpha = 0.6;
+  _libCtxUtil.pathPolygon(ctx, shadowPoints.map(worldToScreen));
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  // draw circle shape and outline
+  ctx.fillStyle = "#c23d23";
+  ctx.strokeStyle = "black";
+  ctx.lineWidth = 5;
+  _libCtxUtil.pathPolyline(ctx, [...circlePointsScreen, circlePointsScreen[0]]);
+  // ctx.stroke();
+  ctx.fill();
+  ctx.stroke();
+  // draw each vertex
+  for (const worldPoint of circlePointsWorld) {
+    const camPoint = worldToCam(worldPoint);
+    const dist = _libVec.magnitude(camPoint);
+    const screenPoint = camToScreen(camPoint);
+    _libCtxUtil.drawDisc(ctx, screenPoint, 60 / dist, {
+      fillStyle: "black"
+    });
+  }
+}
+function renderScene(ctx, cam) {
+  const worldToCam = _spaceConversion.worldPointToCamPoint(cam);
+  const camToScreen = _spaceConversion.camPointToScreenPoint(ctx, cam);
+  const worldToScreen = _fpTsLibFunction.flow(worldToCam, camToScreen);
+  renderFloorGrid(ctx, worldToScreen);
+  renderWobblyDisc(ctx, worldToCam, camToScreen, worldToScreen, wobblyDiscState);
+}
+const canvas = _libCanvasUtil.setupCanvas();
+const ctx = canvas.getContext("2d");
+const backgroundColor = "#d4d3d2";
+let wobblyDiscState = {
+  radius: 2,
+  y: 0.05,
+  theta: 0,
+  kineticEnergy: 10
+};
+function calculateWobbleSpeed(state) {
+  const {kineticEnergy, radius, y} = state;
+  const w = sqrt(radius ** 2 - y ** 2);
+  return sqrt(kineticEnergy / (Math.PI * radius ** 2 * (radius ** 2 * w ** -2 - 1)));
+}
+let camera = {
+  radius: 10,
+  latitude: 0,
+  longitude: 0,
+  orthoSize: [canvas.width, canvas.height]
+};
+const updateCamera = () => {
+  camera = {
+    ...camera,
+    orthoSize: [canvas.width / 2, canvas.height / 2]
+  };
+};
+const transformCamera = transformation => {
+  camera = transformation(camera);
+  render();
+};
+const render = () => {
+  const {canvas} = ctx;
+  const [w, h] = [canvas.width, canvas.height];
+  ctx.save();
+  ctx.fillStyle = backgroundColor;
+  ctx.fillRect(0, 0, w, h);
+  ctx.translate(w / 2, h / 2);
+  ctx.scale(window.devicePixelRatio, -window.devicePixelRatio);
+  const perspectiveCam = {
+    ..._cameraOrbitCamera.toRegularCamera(camera),
+    settings: {
+      planeWidthHalf: canvas.width,
+      planeHeightHalf: canvas.height,
+      zScale: 2000
+    }
+  };
+  Object.assign(ctx, {
+    strokeStyle: "#3b3a39",
+    lineWidth: 2,
+    lineJoin: "round"
+  });
+  renderScene(ctx, perspectiveCam);
+  ctx.restore();
+};
+updateCamera();
+setupOrbitCameraControl(canvas, transformCamera);
+render();
+let loopRunning = true;
+_util.startLoop(args => {
+  if (!loopRunning) return;
+  const wobbleSpeed = calculateWobbleSpeed(wobblyDiscState);
+  wobblyDiscState = {
+    ...wobblyDiscState,
+    theta: wobblyDiscState.theta + args.dt * wobbleSpeed
+  };
+  render();
+});
+document.addEventListener("keydown", e => {
+  if (e.key === " ") {
+    loopRunning = !loopRunning;
+  }
+});

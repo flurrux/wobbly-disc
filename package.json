@@ -1,0 +1,17 @@
+{
+  "name": "@flurrux/wobbly-disc",
+  "version": "1.0.0",
+  "description": "just read the instructions",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Christian Hoffmann <christianhoffmann@outlook.com>",
+  "license": "ISC",
+  "dependencies": {
+    "fp-ts": "^2.10.4"
+  },
+  "devDependencies": {
+    "cssnano": "^4.1.10",
+    "typescript": "^3.9.9"
+  }
+}

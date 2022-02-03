@@ -1,0 +1,80 @@
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "vector3", function () {
+  return vector3;
+});
+_parcelHelpers.export(exports, "add", function () {
+  return add;
+});
+_parcelHelpers.export(exports, "sum", function () {
+  return sum;
+});
+_parcelHelpers.export(exports, "multiply", function () {
+  return multiply;
+});
+_parcelHelpers.export(exports, "subtract", function () {
+  return subtract;
+});
+_parcelHelpers.export(exports, "divide", function () {
+  return divide;
+});
+_parcelHelpers.export(exports, "isZero", function () {
+  return isZero;
+});
+_parcelHelpers.export(exports, "equal", function () {
+  return equal;
+});
+_parcelHelpers.export(exports, "magnitude", function () {
+  return magnitude;
+});
+_parcelHelpers.export(exports, "sqrdMagnitude", function () {
+  return sqrdMagnitude;
+});
+_parcelHelpers.export(exports, "normalize", function () {
+  return normalize;
+});
+_parcelHelpers.export(exports, "distance", function () {
+  return distance;
+});
+_parcelHelpers.export(exports, "dot", function () {
+  return dot;
+});
+_parcelHelpers.export(exports, "cross", function () {
+  return cross;
+});
+_parcelHelpers.export(exports, "project", function () {
+  return project;
+});
+_parcelHelpers.export(exports, "interpolate", function () {
+  return interpolate;
+});
+_parcelHelpers.export(exports, "round", function () {
+  return round;
+});
+const vector3 = (x, y, z) => [x, y, z];
+const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+function sum(vectors) {
+  let sum = [0, 0, 0];
+  for (const vec of vectors) {
+    sum[0] += vec[0];
+    sum[1] += vec[1];
+    sum[2] += vec[2];
+  }
+  return sum;
+}
+const multiply = (vector, scalar) => [vector[0] * scalar, vector[1] * scalar, vector[2] * scalar];
+const subtract = (a, b) => add(a, multiply(b, -1));
+const divide = (vector, denominator) => multiply(vector, 1 / denominator);
+const isZero = vector => vector.every(component => component === 0);
+const equal = (a, b) => isZero(subtract(a, b));
+const magnitude = vector => Math.hypot(...vector);
+const sqrdMagnitude = v => v[0] ** 2 + v[1] ** 2 + v[2] ** 2;
+const normalize = vector => isZero(vector) ? [0, 0, 0] : divide(vector, magnitude(vector));
+const distance = (a, b) => magnitude(subtract(a, b));
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const cross = (a, b) => [a[1] * b[2] - b[1] * a[2], a[2] * b[0] - b[2] * a[0], a[0] * b[1] - b[0] * a[1]];
+const project = (normal, point) => {
+  return multiply(normal, dot(normal, point));
+};
+const interpolate = (a, b, t) => add(a, multiply(subtract(b, a), t));
+const round = v => v.map(Math.round);

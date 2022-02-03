@@ -1,0 +1,46 @@
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "identity", function () {
+  return identity;
+});
+_parcelHelpers.export(exports, "multiplyVector", function () {
+  return multiplyVector;
+});
+_parcelHelpers.export(exports, "multiplyMatrix", function () {
+  return multiplyMatrix;
+});
+_parcelHelpers.export(exports, "inverse", function () {
+  return inverse;
+});
+_parcelHelpers.export(exports, "rotation", function () {
+  return rotation;
+});
+var _vec = require("./vec3");
+const identity = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+const multiplyVector = (matrix, vector) => [matrix[0] * vector[0] + matrix[3] * vector[1] + matrix[6] * vector[2], matrix[1] * vector[0] + matrix[4] * vector[1] + matrix[7] * vector[2], matrix[2] * vector[0] + matrix[5] * vector[1] + matrix[8] * vector[2]];
+const multiplyMatrix = (a, b) => [...multiplyVector(a, b.slice(0, 3)), ...multiplyVector(a, b.slice(3, 6)), ...multiplyVector(a, b.slice(6, 9))];
+const inverse = matrix => {
+  const [a, b, c, d, e, f, g, h, i] = matrix;
+  const vals = [e * i - f * h, f * g - i * d, h * d - g * e, b * i - c * h, c * g - a * i, h * a - g * b, e * c - f * b, f * a - d * c, b * d - a * e];
+  const m = 1 / (a * vals[0] + b * vals[1] + c * vals[2]);
+  const n = 1 / (d * vals[3] + e * vals[4] + f * vals[5]);
+  const o = 1 / (g * vals[6] + h * vals[7] + i * vals[8]);
+  return [vals[0] * m, vals[3] * n, vals[6] * o, vals[1] * m, vals[4] * n, vals[7] * o, vals[2] * m, vals[5] * n, vals[8] * o];
+};
+const rotateVector = (axis, angle) => vec => {
+  const sinDir = _vec.normalize(_vec.cross(axis, vec));
+  const axisCenter = _vec.multiply(axis, _vec.dot(axis, vec));
+  const cosDir = _vec.normalize(_vec.subtract(vec, axisCenter));
+  const [sin, cos] = [Math.sin(angle), Math.cos(angle)];
+  const radius = _vec.distance(axisCenter, vec);
+  return _vec.add(axisCenter, _vec.multiply(_vec.add(_vec.multiply(sinDir, sin), _vec.multiply(cosDir, cos)), radius));
+};
+const rotation = vector => {
+  if (_vec.isZero(vector)) {
+    return identity;
+  }
+  const axis = _vec.normalize(vector);
+  const angle = _vec.magnitude(vector);
+  const rotateFunc = rotateVector(axis, angle);
+  return [...rotateFunc([1, 0, 0]), ...rotateFunc([0, 1, 0]), ...rotateFunc([0, 0, 1])];
+};

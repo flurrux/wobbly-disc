@@ -1,0 +1,28 @@
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "pathPolygon", function () {
+  return pathPolygon;
+});
+_parcelHelpers.export(exports, "pathPolyline", function () {
+  return pathPolyline;
+});
+_parcelHelpers.export(exports, "drawDisc", function () {
+  return drawDisc;
+});
+const pathPolygon = (ctx, polygon) => {
+  pathPolyline(ctx, polygon);
+  ctx.closePath();
+};
+const pathPolyline = (ctx, polyline) => {
+  ctx.beginPath();
+  ctx.moveTo(...polyline[0]);
+  polyline.slice(1).map(point => ctx.lineTo(...point));
+};
+function drawDisc(ctx, point, radius, style) {
+  if (style) {
+    Object.assign(ctx, style);
+  }
+  ctx.beginPath();
+  ctx.arc(point[0], point[1], radius, 0, Math.PI * 2);
+  ctx.fill();
+}

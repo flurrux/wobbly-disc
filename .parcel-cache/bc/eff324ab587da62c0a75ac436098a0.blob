@@ -1,0 +1,28 @@
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "toRegularCamera", function () {
+  return toRegularCamera;
+});
+var _libMat3x = require("../../lib/mat3x3");
+var _libVec = require('../../lib/vec3');
+function calculateOrientation(orbitCam) {
+  const rotationMatrix1 = _libMat3x.rotation([0, orbitCam.longitude, 0]);
+  const rotationMatrix2 = _libMat3x.rotation([orbitCam.latitude, 0, 0]);
+  return _libMat3x.multiplyMatrix(rotationMatrix1, rotationMatrix2);
+}
+function calculateTransform(orbitCam) {
+  const orientation = calculateOrientation(orbitCam);
+  const forward = orientation.slice(6);
+  const position = _libVec.multiply(forward, -orbitCam.radius);
+  return {
+    position,
+    orientation
+  };
+}
+function toRegularCamera(orbitCam) {
+  const transform = calculateTransform(orbitCam);
+  return {
+    transform,
+    inverseMatrix: _libMat3x.inverse(transform.orientation)
+  };
+}

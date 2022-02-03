@@ -1,0 +1,119 @@
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "randomVector", function () {
+  return randomVector;
+});
+_parcelHelpers.export(exports, "vec3ToColor", function () {
+  return vec3ToColor;
+});
+_parcelHelpers.export(exports, "randomColor", function () {
+  return randomColor;
+});
+_parcelHelpers.export(exports, "randomRange", function () {
+  return randomRange;
+});
+_parcelHelpers.export(exports, "scaleVector", function () {
+  return scaleVector;
+});
+_parcelHelpers.export(exports, "randomUnitVector", function () {
+  return randomUnitVector;
+});
+_parcelHelpers.export(exports, "createArray", function () {
+  return createArray;
+});
+_parcelHelpers.export(exports, "normalize", function () {
+  return normalize;
+});
+_parcelHelpers.export(exports, "interpolate", function () {
+  return interpolate;
+});
+_parcelHelpers.export(exports, "mapRange", function () {
+  return mapRange;
+});
+_parcelHelpers.export(exports, "setY", function () {
+  return setY;
+});
+_parcelHelpers.export(exports, "setYZero", function () {
+  return setYZero;
+});
+_parcelHelpers.export(exports, "flattenY", function () {
+  return flattenY;
+});
+_parcelHelpers.export(exports, "isVoxelEnclosed", function () {
+  return isVoxelEnclosed;
+});
+_parcelHelpers.export(exports, "removeEnclosedVoxels", function () {
+  return removeEnclosedVoxels;
+});
+_parcelHelpers.export(exports, "startLoop", function () {
+  return startLoop;
+});
+_parcelHelpers.export(exports, "range", function () {
+  return range;
+});
+var _fpTsLibFunction = require('fp-ts/lib/function');
+var _libVec = require('../lib/vec3');
+const randomVector = (maxMag = 2) => [0, 1, 2].map(() => (Math.random() - 0.5) * maxMag);
+const vec3ToColor = v => `rgb(${_libVec.round(v).join(",")})`;
+const randomColor = () => `rgb(${[0, 1, 2].map(() => Math.round(Math.random() * 255)).join(",")})`;
+const randomRange = (min, max) => min + (max - min) + Math.random();
+const scaleVector = scale => vec => [vec[0] * scale, vec[1] * scale];
+const randomUnitVector = () => _libVec.normalize([0, 1, 2].map(() => Math.random() - 0.5));
+const createArray = length => {
+  const arr = [];
+  for (let i = 0; i < length; i++) {
+    arr[i] = i;
+  }
+  return arr;
+};
+function normalize(from, to, value) {
+  return (value - from) / (to - from);
+}
+function interpolate(from, to, value) {
+  return from + (to - from) * value;
+}
+const mapRange = (range1, range2, value) => {
+  const relVal = value - range1[0];
+  const scale = (range2[1] - range2[0]) / (range1[1] - range1[0]);
+  return range2[0] + relVal * scale;
+};
+const setY = y => v => [v[0], y, v[2]];
+const setYZero = setY(0);
+const flattenY = _fpTsLibFunction.flow(setYZero, _libVec.normalize);
+const voxelExistsAt = (voxels, point) => {
+  return voxels.some(v => _libVec.equal(v, point));
+};
+const voxelExistsOrIsGroundAt = voxels => point => {
+  if (point[1] < 0) return true;
+  return voxelExistsAt(voxels, point);
+};
+const enclosingOffsets = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+const isVoxelEnclosed = voxels => voxel => {
+  return enclosingOffsets.map(offset => _libVec.add(voxel, offset)).every(voxelExistsOrIsGroundAt(voxels));
+};
+function removeEnclosedVoxels(voxels) {
+  return voxels.filter(_fpTsLibFunction.not(isVoxelEnclosed(voxels)));
+}
+const startLoop = onLoop => {
+  let accumTime = 0;
+  let prevTime = 0;
+  const loop = () => {
+    const curTime = window.performance.now();
+    const deltaTime = (curTime - prevTime) / 1000;
+    accumTime += deltaTime;
+    prevTime = curTime;
+    onLoop({
+      dt: deltaTime,
+      t: accumTime
+    });
+    requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+};
+function range(start, end) {
+  const array = [];
+  for (let i = start; i < end; i++) {
+    array.push(i);
+  }
+  return array;
+}
