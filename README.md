@@ -1,11 +1,11 @@
  
 # wobbly disc  
 
-<img src="./demo/wobbly-disc-high.gif" style="width: 300px;" />
+<img src="./demo/wobbly-disc-high.gif" style="width: 400px;" />
 
-<img src="./demo/wobbly-disc-medium.gif" style="width: 300px;" />
+<img src="./demo/wobbly-disc-medium.gif" style="width: 400px;" />
 
-<img src="./demo/wobbly-disc-low.gif" style="width: 300px;" />
+<img src="./demo/wobbly-disc-low.gif" style="width: 400px;" />
 
 
 # about
