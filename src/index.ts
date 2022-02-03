@@ -238,7 +238,7 @@ function calculateAlpha(state: WobblyDiscState){
 
 let camera: OrthoOrbitCamera = {
 	radius: 10,
-	latitude: 0,
+	latitude: 0.5,
 	longitude: 0,
 	orthoSize: [canvas.width, canvas.height]
 };
